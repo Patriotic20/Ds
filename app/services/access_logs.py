@@ -26,15 +26,14 @@ ERROR_MAP = {
 
 def _shift_range(shift: str) -> tuple[datetime, datetime, str]:
     """
-    Окно выборки логов 06:00 → 20:00.
-    day   = сегодня 06:00 → 20:00 (запуск в 19:00, добирает события за день)
-    night = вчера 06:00 → 20:00 (запуск в 09:00, полный retro вчерашнего)
+    Окна выборки логов в текущем дне:
+      morning = сегодня 06:00 → 09:00 (запуск в 09:00, утренний сбор)
+      evening = сегодня 06:00 → 20:00 (запуск в 20:00, полный день)
     """
     today = datetime.now(TZ).replace(hour=0, minute=0, second=0, microsecond=0)
-    if shift == "day":
-        return today.replace(hour=6), today.replace(hour=20), "DAY"
-    yesterday = today - timedelta(days=1)
-    return yesterday.replace(hour=6), yesterday.replace(hour=20), "NIGHT"
+    if shift == "morning":
+        return today.replace(hour=6), today.replace(hour=9), "MORNING"
+    return today.replace(hour=6), today.replace(hour=20), "EVENING"
 
 
 def _is_valid_record(rec: dict) -> bool:

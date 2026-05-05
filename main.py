@@ -30,9 +30,9 @@ async def _reconcile_absentees() -> None:
 
 def _build_scheduler() -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler(timezone=TZ)
-    scheduler.add_job(fetch_access_logs, "cron", hour=9, minute=0, kwargs={"shift": "night"})
-    scheduler.add_job(fetch_access_logs, "cron", hour=19, minute=0, kwargs={"shift": "day"})
-    scheduler.add_job(_reconcile_absentees, "cron", hour=23, minute=55)
+    scheduler.add_job(fetch_access_logs, "cron", hour=9, minute=0, kwargs={"shift": "morning"})
+    scheduler.add_job(fetch_access_logs, "cron", hour=20, minute=0, kwargs={"shift": "evening"})
+    scheduler.add_job(_reconcile_absentees, "cron", hour=20, minute=30)
     return scheduler
 
 
@@ -54,14 +54,14 @@ async def main() -> None:
     scheduler.start()
 
     logger.info("Планировщик запущен")
-    logger.info("  09:00 → retro вчерашнего дня (06:00 → 20:00)")
-    logger.info("  19:00 → сегодня (06:00 → 20:00)")
-    logger.info("  23:55 → отметка отсутствующих за день")
+    logger.info("  09:00 → утренний сбор (сегодня 06:00 → 09:00)")
+    logger.info("  20:00 → полный сбор за день (сегодня 06:00 → 20:00)")
+    logger.info("  20:30 → отметка отсутствующих за день")
 
     if os.getenv("RUN_ON_STARTUP", "false").lower() == "true":
         logger.info("RUN_ON_STARTUP=true → тестовый прогон при старте...")
         try:
-            await fetch_access_logs("day")
+            await fetch_access_logs("evening")
         except Exception:
             logger.exception("Тестовый прогон упал — продолжаем с расписанием")
         logger.info("Тестовый прогон завершён.")
